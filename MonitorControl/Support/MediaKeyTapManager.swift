@@ -171,6 +171,7 @@ class MediaKeyTapManager: MediaKeyTapDelegate {
   }
 
   func updateMediaKeyTap() {
+    MSIMD272MediaKeyInterceptor.shared.update()
     var keys: [MediaKey] = []
     let hasMSIMD272SpecialDisplay = !DisplayManager.shared.getMSIMD272SpecialDisplays().isEmpty
     if [KeyboardBrightness.media.rawValue, KeyboardBrightness.both.rawValue].contains(prefs.integer(forKey: PrefKey.keyboardBrightness.rawValue)) {
