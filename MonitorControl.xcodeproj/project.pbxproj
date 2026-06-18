@@ -28,6 +28,8 @@
 		AA25F6D726E68C160087F3A2 /* MediaKeyTapManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA25F6D626E68C160087F3A2 /* MediaKeyTapManager.swift */; };
 		AA3B4A2826AE103C00B74CD2 /* README.md in Resources */ = {isa = PBXBuildFile; fileRef = AA3B4A2726AE103C00B74CD2 /* README.md */; };
 		AA4398A926DD55DA00943F16 /* IntelDDC.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA4398A826DD55DA00943F16 /* IntelDDC.swift */; };
+		B0D272012A00000100D27201 /* MSIMD272SpecialControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0D272002A00000100D27201 /* MSIMD272SpecialControl.swift */; };
+		B0D272032A00000100D27201 /* msi-hid-volume-set in Resources */ = {isa = PBXBuildFile; fileRef = B0D272022A00000100D27201 /* msi-hid-volume-set */; };
 		AA44E703270377C200E06865 /* KeyboardShortcuts in Frameworks */ = {isa = PBXBuildFile; productRef = AA44E702270377C200E06865 /* KeyboardShortcuts */; };
 		AA44E7052703790100E06865 /* KeyboardShortcuts+Extension.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA44E7042703790100E06865 /* KeyboardShortcuts+Extension.swift */; };
 		AA44E70727038F7F00E06865 /* KeyboardShortcutsManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA44E70627038F7F00E06865 /* KeyboardShortcutsManager.swift */; };
@@ -114,6 +116,8 @@
 		AA25F6D626E68C160087F3A2 /* MediaKeyTapManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaKeyTapManager.swift; sourceTree = "<group>"; };
 		AA3B4A2726AE103C00B74CD2 /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		AA4398A826DD55DA00943F16 /* IntelDDC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IntelDDC.swift; sourceTree = "<group>"; };
+		B0D272002A00000100D27201 /* MSIMD272SpecialControl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MSIMD272SpecialControl.swift; sourceTree = "<group>"; };
+		B0D272022A00000100D27201 /* msi-hid-volume-set */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; path = "msi-hid-volume-set"; sourceTree = "<group>"; };
 		AA44E7042703790100E06865 /* KeyboardShortcuts+Extension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "KeyboardShortcuts+Extension.swift"; sourceTree = "<group>"; };
 		AA44E70627038F7F00E06865 /* KeyboardShortcutsManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardShortcutsManager.swift; sourceTree = "<group>"; };
 		AA473EB026DFF8DE0063A181 /* Command.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Command.swift; sourceTree = "<group>"; };
@@ -316,6 +320,8 @@
 				AA44E70627038F7F00E06865 /* KeyboardShortcutsManager.swift */,
 				AA16139A26BE772E00DCF027 /* Arm64DDC.swift */,
 				AA4398A826DD55DA00943F16 /* IntelDDC.swift */,
+				B0D272002A00000100D27201 /* MSIMD272SpecialControl.swift */,
+				B0D272022A00000100D27201 /* msi-hid-volume-set */,
 				FE4E0895249D584C003A50BB /* OSDUtils.swift */,
 			);
 			path = Support;
@@ -505,6 +511,7 @@
 				F01B0699228221B7008E64DB /* Localizable.strings in Resources */,
 				AAB2F63D273ED0AD004AB5A4 /* .gitignore in Resources */,
 				8C1741882707B91F00E88D53 /* InternetAccessPolicy.strings in Resources */,
+				B0D272032A00000100D27201 /* msi-hid-volume-set in Resources */,
 				AAB2F644273ED0E9004AB5A4 /* License.txt in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -636,6 +643,7 @@
 				AA44E7052703790100E06865 /* KeyboardShortcuts+Extension.swift in Sources */,
 				F0A489C4279C71B200BEDFD6 /* OnboardingViewController.swift in Sources */,
 				AA16139B26BE772E00DCF027 /* Arm64DDC.swift in Sources */,
+				B0D272012A00000100D27201 /* MSIMD272SpecialControl.swift in Sources */,
 				F0445D3820023E710025AE82 /* MainPrefsViewController.swift in Sources */,
 				28D1DDF2227FBE71004CB494 /* NSScreen+Extension.swift in Sources */,
 				AA99521726FE25AB00612E07 /* AppDelegate.swift in Sources */,

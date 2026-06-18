@@ -153,7 +153,7 @@ class OtherDisplay: Display {
       let delay = self.readPrefAsBool(key: .longerDelay) ? UInt64(40 * kMillisecondScale) : nil
       if let muteValues: (current: UInt16, max: UInt16) = self.readDDCValues(for: .audioMuteScreenBlank, tries: UInt(self.pollingCount), minReplyDelay: delay) {
         os_log("- Success, current Mute setting: %{public}@", type: .info, String(muteValues.current))
-        currentMuteValue = Int(muteValues.current)
+        currentMuteValue = self.convertMSIMD272MuteReadValue(Int(muteValues.current))
       } else {
         os_log("- Mute read failed", type: .info)
       }
@@ -403,6 +403,11 @@ class OtherDisplay: Display {
       self.writeDDCLastSavedValue[command] = value
       self.savePref(true, key: PrefKey.isTouched, for: command)
     }
+    if self.isMSIMD272SpecialDisplay, command == .audioSpeakerVolume {
+      _ = MSIMD272HIDVolume.setVolume(value)
+      return
+    }
+    let writeValue = command == .audioMuteScreenBlank ? self.convertMSIMD272MuteWriteValue(value) : value
     var controlCodes = self.getRemapControlCodes(command: command)
     if controlCodes.count == 0 {
       controlCodes.append(command.rawValue)
@@ -410,10 +415,10 @@ class OtherDisplay: Display {
     for controlCode in controlCodes {
       if Arm64DDC.isArm64 {
         if self.arm64ddc {
-          _ = Arm64DDC.write(service: self.arm64avService, command: controlCode, value: value)
+          _ = Arm64DDC.write(service: self.arm64avService, command: controlCode, value: writeValue)
         }
       } else {
-        _ = self.ddc?.write(command: controlCode, value: value, errorRecoveryWaitTime: 2000) ?? false
+        _ = self.ddc?.write(command: controlCode, value: writeValue, errorRecoveryWaitTime: 2000) ?? false
       }
     }
   }
