@@ -72,3 +72,9 @@ extension OtherDisplay {
     }
   }
 }
+
+extension DisplayManager {
+  func getMSIMD272SpecialDisplays() -> [OtherDisplay] {
+    self.getOtherDisplays().filter { $0.isMSIMD272SpecialDisplay && !$0.readPrefAsBool(key: .isDisabled) }
+  }
+}

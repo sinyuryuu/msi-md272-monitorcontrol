@@ -5,6 +5,7 @@ import Cocoa
 import Foundation
 import MediaKeyTap
 import os.log
+import SimplyCoreAudio
 
 class MediaKeyTapManager: MediaKeyTapDelegate {
   var mediaKeyTap: MediaKeyTap?
@@ -73,8 +74,18 @@ class MediaKeyTapManager: MediaKeyTapDelegate {
   }
 
   private func sendDisplayCommandVolumeMute(mediaKey: MediaKey, isRepeat: Bool, isSmallIncrement: Bool, isPressed: Bool) {
-    guard [.volumeUp, .volumeDown, .mute].contains(mediaKey), app.sleepID == 0, app.reconfigureID == 0, let affectedDisplays = DisplayManager.shared.getAffectedDisplays(isBrightness: false, isVolume: true) else {
+    guard [.volumeUp, .volumeDown, .mute].contains(mediaKey), app.sleepID == 0, app.reconfigureID == 0 else {
       return
+    }
+    let specialDisplays = DisplayManager.shared.getMSIMD272SpecialDisplays()
+    let affectedDisplays: [Display]
+    if specialDisplays.isEmpty {
+      guard let displays = DisplayManager.shared.getAffectedDisplays(isBrightness: false, isVolume: true) else {
+        return
+      }
+      affectedDisplays = displays
+    } else {
+      affectedDisplays = specialDisplays
     }
     var wasNotIsPressedVolumeSentAlready = false
     for display in affectedDisplays where !display.readPrefAsBool(key: .isDisabled) {
@@ -145,12 +156,27 @@ class MediaKeyTapManager: MediaKeyTapDelegate {
     return nil
   }
 
+  private func shouldCaptureVolumeMediaKeys(hasMSIMD272SpecialDisplay: Bool) -> Bool {
+    hasMSIMD272SpecialDisplay || [KeyboardVolume.media.rawValue, KeyboardVolume.both.rawValue].contains(prefs.integer(forKey: PrefKey.keyboardVolume.rawValue))
+  }
+
+  private func defaultAudioDeviceForVolumeKeyRemoval(hasMSIMD272SpecialDisplay: Bool) -> AudioDevice? {
+    hasMSIMD272SpecialDisplay ? nil : app.coreAudio.defaultOutputDevice
+  }
+
+  private func promptForMSIMD272AccessibilityIfNeeded(hasMSIMD272SpecialDisplay: Bool, keys: [MediaKey]) {
+    if hasMSIMD272SpecialDisplay, keys.count > 0 {
+      _ = Self.readPrivileges(prompt: true)
+    }
+  }
+
   func updateMediaKeyTap() {
     var keys: [MediaKey] = []
+    let hasMSIMD272SpecialDisplay = !DisplayManager.shared.getMSIMD272SpecialDisplays().isEmpty
     if [KeyboardBrightness.media.rawValue, KeyboardBrightness.both.rawValue].contains(prefs.integer(forKey: PrefKey.keyboardBrightness.rawValue)) {
       keys.append(contentsOf: [.brightnessUp, .brightnessDown])
     }
-    if [KeyboardVolume.media.rawValue, KeyboardVolume.both.rawValue].contains(prefs.integer(forKey: PrefKey.keyboardVolume.rawValue)) {
+    if self.shouldCaptureVolumeMediaKeys(hasMSIMD272SpecialDisplay: hasMSIMD272SpecialDisplay) {
       keys.append(contentsOf: [.mute, .volumeUp, .volumeDown])
     }
     // Remove brightness keys if no external displays are connected, but only if brightness fine control is not active
@@ -167,7 +193,7 @@ class MediaKeyTapManager: MediaKeyTapDelegate {
       keys.removeAll { keysToDelete.contains($0) }
     }
     // Remove volume related keys if audio device is controllable
-    if let defaultAudioDevice = app.coreAudio.defaultOutputDevice {
+    if let defaultAudioDevice = self.defaultAudioDeviceForVolumeKeyRemoval(hasMSIMD272SpecialDisplay: hasMSIMD272SpecialDisplay) {
       let keysToDelete: [MediaKey] = [.volumeUp, .volumeDown, .mute]
       if prefs.integer(forKey: PrefKey.multiKeyboardVolume.rawValue) == MultiKeyboardVolume.audioDeviceNameMatching.rawValue {
         if DisplayManager.shared.updateAudioControlTargetDisplays(deviceName: defaultAudioDevice.name) == 0 {
@@ -180,6 +206,7 @@ class MediaKeyTapManager: MediaKeyTapDelegate {
     self.mediaKeyTap?.stop()
     // returning an empty array listens for all mediakeys in MediaKeyTap
     if keys.count > 0 {
+      self.promptForMSIMD272AccessibilityIfNeeded(hasMSIMD272SpecialDisplay: hasMSIMD272SpecialDisplay, keys: keys)
       self.mediaKeyTap = MediaKeyTap(delegate: self, on: KeyPressMode.keyDownAndUp, for: keys, observeBuiltIn: true)
       self.mediaKeyTap?.start()
     }
