@@ -20,6 +20,9 @@ class MenuHandler: NSMenu, NSMenuDelegate {
   }
 
   func menuWillOpen(_: NSMenu) {
+    for display in DisplayManager.shared.getMSIMD272SpecialDisplays() {
+      display.refreshMSIMD272BrightnessFromDisplay()
+    }
     self.updateMenuRelevantDisplay()
     app.keyboardShortcuts.disengage()
   }
@@ -191,6 +194,9 @@ class MenuHandler: NSMenu, NSMenuDelegate {
     }
     display.sliderHandler[.brightness] = nil
     if !display.readPrefAsBool(key: .unavailableDDC, for: .brightness), !prefs.bool(forKey: PrefKey.hideBrightness.rawValue) {
+      if let otherDisplay = display as? OtherDisplay, otherDisplay.isMSIMD272SpecialDisplay {
+        otherDisplay.refreshMSIMD272BrightnessFromDisplay()
+      }
       let title = NSLocalizedString("Brightness", comment: "Shown in menu")
       addedSliderHandlers.append(self.setupMenuSliderHandler(command: .brightness, display: display, title: title))
     }

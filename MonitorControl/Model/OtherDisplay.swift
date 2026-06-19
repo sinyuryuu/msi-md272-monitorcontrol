@@ -189,7 +189,11 @@ class OtherDisplay: Display {
       }
     }
     if !self.readPrefAsBool(key: .hideOsd) {
-      OSDUtils.showOsd(displayID: self.identifier, command: .audioSpeakerVolume, value: volumeOSDValue, roundChiclet: !isSmallIncrement)
+      if self.isMSIMD272SpecialDisplay {
+        MSIMD272ControlHUD.shared.show(displayID: self.identifier, title: "音量", value: volumeOSDValue, muted: volumeOSDValue == 0)
+      } else {
+        OSDUtils.showOsd(displayID: self.identifier, command: .audioSpeakerVolume, value: volumeOSDValue, roundChiclet: !isSmallIncrement)
+      }
     }
     if !isAlreadySet {
       self.savePref(volumeOSDValue, for: .audioSpeakerVolume)
@@ -246,7 +250,11 @@ class OtherDisplay: Display {
     }
     if !fromVolumeSlider {
       if !self.readPrefAsBool(key: .hideOsd) {
-        OSDUtils.showOsd(displayID: self.identifier, command: volumeOSDValue > 0 ? .audioSpeakerVolume : .audioMuteScreenBlank, value: volumeOSDValue, roundChiclet: true)
+        if self.isMSIMD272SpecialDisplay {
+          MSIMD272ControlHUD.shared.show(displayID: self.identifier, title: "音量", value: volumeOSDValue, muted: volumeOSDValue == 0)
+        } else {
+          OSDUtils.showOsd(displayID: self.identifier, command: volumeOSDValue > 0 ? .audioSpeakerVolume : .audioMuteScreenBlank, value: volumeOSDValue, roundChiclet: true)
+        }
       }
       if let slider = self.sliderHandler[.audioSpeakerVolume] {
         slider.setValue(volumeOSDValue)
@@ -305,12 +313,18 @@ class OtherDisplay: Display {
     guard !self.readPrefAsBool(key: .unavailableDDC, for: .brightness) else {
       return
     }
+    if self.isMSIMD272SpecialDisplay {
+      self.stepMSIMD272HardwareBrightness(isUp: isUp)
+      return
+    }
     let currentValue = self.readPrefAsFloat(for: .brightness)
     var osdValue: Float = 1
     if !prefs.bool(forKey: PrefKey.disableCombinedBrightness.rawValue), prefs.bool(forKey: PrefKey.separateCombinedScale.rawValue) {
       osdValue = self.calcNewValue(currentValue: currentValue, isUp: isUp, isSmallIncrement: isSmallIncrement, half: true)
       _ = self.setBrightness(osdValue)
-      if osdValue > self.combinedBrightnessSwitchingValue() {
+      if self.isMSIMD272SpecialDisplay {
+        MSIMD272ControlHUD.shared.show(displayID: self.identifier, title: "亮度", value: osdValue)
+      } else if osdValue > self.combinedBrightnessSwitchingValue() {
         OSDUtils.showOsd(displayID: self.identifier, command: .brightness, value: osdValue - self.combinedBrightnessSwitchingValue(), maxValue: self.combinedBrightnessSwitchingValue(), roundChiclet: !isSmallIncrement)
       } else {
         self.doSwAfterOsdAnimation()
@@ -318,7 +332,11 @@ class OtherDisplay: Display {
     } else {
       osdValue = self.calcNewValue(currentValue: currentValue, isUp: isUp, isSmallIncrement: isSmallIncrement)
       _ = self.setBrightness(osdValue)
-      OSDUtils.showOsd(displayID: self.identifier, command: .brightness, value: osdValue, roundChiclet: !isSmallIncrement)
+      if self.isMSIMD272SpecialDisplay {
+        MSIMD272ControlHUD.shared.show(displayID: self.identifier, title: "亮度", value: osdValue)
+      } else {
+        OSDUtils.showOsd(displayID: self.identifier, command: .brightness, value: osdValue, roundChiclet: !isSmallIncrement)
+      }
     }
     if let slider = self.sliderHandler[.brightness] {
       slider.setValue(osdValue, displayID: self.identifier)

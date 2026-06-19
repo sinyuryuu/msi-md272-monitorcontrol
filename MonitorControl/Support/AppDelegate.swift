@@ -16,6 +16,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     item.behavior = .removalAllowed
     return item
   }()
+
   var mediaKeyTap = MediaKeyTapManager()
   var keyboardShortcuts = KeyboardShortcutsManager()
   let coreAudio = SimplyCoreAudio()
@@ -64,6 +65,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     self.setMenu()
     CGDisplayRegisterReconfigurationCallback({ _, _, _ in app.displayReconfigured() }, nil)
     self.configure(firstrun: true)
+    self.scheduleMSIMD272MediaKeyInterceptorRetries()
     DisplayManager.shared.createGammaActivityEnforcer()
     self.updaterController.startUpdater()
   }
@@ -175,7 +177,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     NSWorkspace.shared.notificationCenter.addObserver(self, selector: #selector(self.sleepNotification), name: NSWorkspace.willSleepNotification, object: nil)
     NSWorkspace.shared.notificationCenter.addObserver(self, selector: #selector(self.wakeNotification), name: NSWorkspace.didWakeNotification, object: nil)
     _ = DistributedNotificationCenter.default().addObserver(forName: NSNotification.Name(rawValue: NSNotification.Name.accessibilityApi.rawValue), object: nil, queue: nil) { _ in DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { self.updateMediaKeyTap() } } // listen for accessibility status changes
-    self.statusItemObserver = statusItem.observe(\.isVisible, options: [.old, .new]) { _, _ in self.statusItemVisibilityChanged() }
+    self.statusItemObserver = self.statusItem.observe(\.isVisible, options: [.old, .new]) { _, _ in self.statusItemVisibilityChanged() }
   }
 
   @objc private func sleepNotification() {
@@ -297,6 +299,16 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     self.mediaKeyTap.updateMediaKeyTap()
   }
 
+  private func scheduleMSIMD272MediaKeyInterceptorRetries() {
+    for delay in [1.0, 3.0, 8.0] {
+      DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
+        msiMD272DebugLog("delayed media key interceptor retry after \(delay)s")
+        NSLog("MSI MD272 delayed media key interceptor retry after %.1fs", delay)
+        MSIMD272MediaKeyInterceptor.shared.update()
+      }
+    }
+  }
+
   func setStartAtLogin(enabled: Bool) {
     let identifier = "\(Bundle.main.bundleIdentifier!)Helper" as CFString
     SMLoginItemSetEnabled(identifier, enabled)
@@ -359,16 +371,16 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     onboardingVc?.window?.center()
     NSApp.activate(ignoringOtherApps: true)
   }
-  
+
   private func statusItemVisibilityChanged() {
     if !self.statusItem.isVisible, self.statusItemVisibilityChangedByUser {
       prefs.set(MenuIcon.hide.rawValue, forKey: PrefKey.menuIcon.rawValue)
     }
   }
-  
+
   func updateStatusItemVisibility(_ visible: Bool) {
-    statusItemVisibilityChangedByUser = false
-    statusItem.isVisible = visible
-    statusItemVisibilityChangedByUser = true
+    self.statusItemVisibilityChangedByUser = false
+    self.statusItem.isVisible = visible
+    self.statusItemVisibilityChangedByUser = true
   }
 }
