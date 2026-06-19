@@ -206,6 +206,8 @@ class MenuHandler: NSMenu, NSMenuDelegate {
     if let otherDisplay = display as? OtherDisplay, otherDisplay.isMSIMD272SpecialDisplay {
       self.addMSIMD272PowerMenu(display: otherDisplay, monitorSubMenu: monitorSubMenu)
       self.addMSIMD272InputSourceMenu(display: otherDisplay, monitorSubMenu: monitorSubMenu)
+      self.addMSIMD272OSDMenu(display: otherDisplay, monitorSubMenu: monitorSubMenu)
+      self.addMSIMD272ExperimentalPIPMenu(display: otherDisplay, monitorSubMenu: monitorSubMenu)
     }
     if addedSliderHandlers.count > 0, prefs.integer(forKey: PrefKey.menuIcon.rawValue) == MenuIcon.sliderOnly.rawValue {
       app.updateStatusItemVisibility(true)
@@ -235,6 +237,7 @@ class MenuHandler: NSMenu, NSMenuDelegate {
     }
 
     let inputItem = NSMenuItem(title: "訊號來源", action: nil, keyEquivalent: "")
+    inputItem.image = self.msiMD272MenuIcon("rectangle.connected.to.line.below")
     inputItem.submenu = inputMenu
     monitorSubMenu.insertItem(inputItem, at: 0)
   }
@@ -242,8 +245,106 @@ class MenuHandler: NSMenu, NSMenuDelegate {
   private func addMSIMD272PowerMenu(display: OtherDisplay, monitorSubMenu: NSMenu) {
     let item = NSMenuItem(title: "關閉螢幕", action: #selector(self.msiMD272PowerOffClicked(_:)), keyEquivalent: "")
     item.target = self
+    item.image = self.msiMD272MenuIcon("power")
     item.representedObject = NSNumber(value: display.identifier)
     monitorSubMenu.insertItem(item, at: 0)
+  }
+
+  private func addMSIMD272OSDMenu(display _: OtherDisplay, monitorSubMenu: NSMenu) {
+    let osdMenu = NSMenu()
+    for setting in MSIMD272OSDSettings.stable {
+      self.addMSIMD272OSDSetting(setting, to: osdMenu)
+    }
+
+    let osdItem = NSMenuItem(title: "螢幕設定", action: nil, keyEquivalent: "")
+    osdItem.image = self.msiMD272MenuIcon("slider.horizontal.3")
+    osdItem.submenu = osdMenu
+    monitorSubMenu.insertItem(osdItem, at: 0)
+  }
+
+  private func addMSIMD272ExperimentalPIPMenu(display _: OtherDisplay, monitorSubMenu: NSMenu) {
+    let pipMenu = NSMenu()
+    let pipMode = MSIMD272HIDInput.getCommand("00600")
+    let canTogglePIPActions = pipMode == 1 || pipMode == 2
+    for setting in MSIMD272OSDSettings.experimental {
+      self.addMSIMD272OSDSetting(setting, to: pipMenu)
+    }
+    pipMenu.addItem(NSMenuItem.separator())
+    for action in MSIMD272OSDSettings.experimentalActions {
+      let item = NSMenuItem(title: action.menuTitle, action: #selector(self.msiMD272OSDActionClicked(_:)), keyEquivalent: "")
+      item.target = self
+      item.isEnabled = canTogglePIPActions
+      item.image = self.msiMD272IconForCommand(action.command)
+      item.representedObject = [
+        "command": action.command,
+        "value": NSNumber(value: action.value),
+        "title": action.menuTitle,
+      ] as [String: Any]
+      pipMenu.addItem(item)
+    }
+
+    let pipItem = NSMenuItem(title: "PIP/PBP", action: nil, keyEquivalent: "")
+    pipItem.image = self.msiMD272MenuIcon("pip")
+    pipItem.submenu = pipMenu
+    monitorSubMenu.insertItem(pipItem, at: 0)
+  }
+
+  private func addMSIMD272OSDSetting(_ setting: MSIMD272OSDSetting, to menu: NSMenu) {
+    let submenu = NSMenu()
+    let currentValue = MSIMD272HIDInput.getCommand(setting.command)
+
+    for option in setting.options {
+      let item = NSMenuItem(title: option.menuTitle, action: #selector(self.msiMD272OSDSettingClicked(_:)), keyEquivalent: "")
+      item.target = self
+      item.state = currentValue == option.rawValue ? .on : .off
+      item.representedObject = [
+        "command": setting.command,
+        "value": NSNumber(value: option.rawValue),
+        "title": setting.menuTitle,
+        "option": option.menuTitle,
+        "experimental": NSNumber(value: setting.isExperimental),
+      ] as [String: Any]
+      submenu.addItem(item)
+    }
+
+    if currentValue == nil {
+      submenu.addItem(NSMenuItem.separator())
+      let unavailableItem = NSMenuItem(title: "目前無法讀取", action: nil, keyEquivalent: "")
+      unavailableItem.isEnabled = false
+      submenu.addItem(unavailableItem)
+    }
+
+    let item = NSMenuItem(title: setting.menuTitle, action: nil, keyEquivalent: "")
+    item.image = self.msiMD272IconForCommand(setting.command)
+    item.submenu = submenu
+    menu.addItem(item)
+  }
+
+  private func msiMD272MenuIcon(_ symbolName: String) -> NSImage? {
+    if #available(macOS 11.0, *) {
+      return NSImage(systemSymbolName: symbolName, accessibilityDescription: nil)
+    }
+    return nil
+  }
+
+  private func msiMD272IconForCommand(_ command: String) -> NSImage? {
+    switch command {
+    case "00510": return self.msiMD272MenuIcon("arrow.triangle.2.circlepath")
+    case "00300": return self.msiMD272MenuIcon("paintpalette")
+    case "00310": return self.msiMD272MenuIcon("eye")
+    case "00220": return self.msiMD272MenuIcon("hare")
+    case "002:0": return self.msiMD272MenuIcon("aspectratio")
+    case "008>0": return self.msiMD272MenuIcon("keyboard")
+    case "00820": return self.msiMD272MenuIcon("timer")
+    case "008:0": return self.msiMD272MenuIcon("hifispeaker")
+    case "00600": return self.msiMD272MenuIcon("rectangle.inset.filled.and.person.filled")
+    case "00610", "00620": return self.msiMD272MenuIcon("rectangle.connected.to.line.below")
+    case "00630": return self.msiMD272MenuIcon("arrow.up.left.and.arrow.down.right")
+    case "00640": return self.msiMD272MenuIcon("arrow.up.left")
+    case "00650": return self.msiMD272MenuIcon("rectangle.2.swap")
+    case "00660": return self.msiMD272MenuIcon("speaker.wave.2")
+    default: return nil
+    }
   }
 
   @objc private func msiMD272PowerOffClicked(_ sender: NSMenuItem) {
@@ -291,6 +392,78 @@ class MenuHandler: NSMenu, NSMenuDelegate {
       let alert = NSAlert()
       alert.messageText = "切換失敗"
       alert.informativeText = "沒有收到螢幕確認回覆。若剛切到 HDMI/DP，HID 介面可能已消失，請用螢幕 OSD 或 DDC fallback 切回 Type-C。"
+      alert.addButton(withTitle: "好")
+      alert.runModal()
+    }
+  }
+
+  @objc private func msiMD272OSDSettingClicked(_ sender: NSMenuItem) {
+    guard
+      let payload = sender.representedObject as? [String: Any],
+      let command = payload["command"] as? String,
+      let value = (payload["value"] as? NSNumber)?.intValue,
+      let title = payload["title"] as? String,
+      let option = payload["option"] as? String
+    else {
+      return
+    }
+
+    let isExperimental = (payload["experimental"] as? NSNumber)?.boolValue ?? false
+    if isExperimental {
+      let alert = NSAlert()
+      alert.messageText = "PIP/PBP"
+      alert.informativeText = "要設定「\(title)」為「\(option)」嗎？"
+      alert.addButton(withTitle: "繼續設定")
+      alert.addButton(withTitle: "取消")
+      guard alert.runModal() == .alertFirstButtonReturn else {
+        return
+      }
+    }
+
+    let success = MSIMD272HIDInput.setCommand(command, value: value)
+    if success {
+      sender.menu?.items.forEach { $0.state = .off }
+      sender.state = .on
+      DispatchQueue.main.asyncAfter(deadline: .now() + (isExperimental ? 1.2 : 0.3)) {
+        self.updateMenus(dontClose: true)
+      }
+    } else {
+      let alert = NSAlert()
+      alert.messageText = "設定失敗"
+      alert.informativeText = "沒有收到螢幕確認回覆：\(title) -> \(option)。"
+      alert.addButton(withTitle: "好")
+      alert.runModal()
+    }
+  }
+
+  @objc private func msiMD272OSDActionClicked(_ sender: NSMenuItem) {
+    guard
+      let payload = sender.representedObject as? [String: Any],
+      let command = payload["command"] as? String,
+      let value = (payload["value"] as? NSNumber)?.intValue,
+      let title = payload["title"] as? String
+    else {
+      return
+    }
+
+    let pipMode = MSIMD272HIDInput.getCommand("00600")
+    guard pipMode == 1 || pipMode == 2 else {
+      sender.isEnabled = false
+      DispatchQueue.main.async {
+        self.updateMenus(dontClose: true)
+      }
+      return
+    }
+
+    let success = MSIMD272HIDInput.setCommand(command, value: value)
+    if success {
+      DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) {
+        self.updateMenus(dontClose: true)
+      }
+    } else {
+      let alert = NSAlert()
+      alert.messageText = "設定失敗"
+      alert.informativeText = "沒有收到螢幕確認回覆：\(title)。"
       alert.addButton(withTitle: "好")
       alert.runModal()
     }

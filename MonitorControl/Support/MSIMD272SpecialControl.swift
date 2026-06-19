@@ -96,6 +96,109 @@ enum MSIMD272InputSource: Int, CaseIterable {
   }
 }
 
+struct MSIMD272OSDOption {
+  let rawValue: Int
+  let menuTitle: String
+}
+
+struct MSIMD272OSDSetting {
+  let command: String
+  let menuTitle: String
+  let options: [MSIMD272OSDOption]
+  let isExperimental: Bool
+}
+
+struct MSIMD272OSDAction {
+  let command: String
+  let menuTitle: String
+  let value: Int
+}
+
+enum MSIMD272OSDSettings {
+  static let stable: [MSIMD272OSDSetting] = [
+    MSIMD272OSDSetting(command: "00510", menuTitle: "自動掃描來源", options: [
+      MSIMD272OSDOption(rawValue: 0, menuTitle: "關閉"),
+      MSIMD272OSDOption(rawValue: 1, menuTitle: "開啟"),
+    ], isExperimental: false),
+    MSIMD272OSDSetting(command: "00300", menuTitle: "螢幕模式", options: [
+      MSIMD272OSDOption(rawValue: 0, menuTitle: "節能"),
+      MSIMD272OSDOption(rawValue: 1, menuTitle: "使用者"),
+      MSIMD272OSDOption(rawValue: 2, menuTitle: "sRGB"),
+      MSIMD272OSDOption(rawValue: 3, menuTitle: "Display P3"),
+      MSIMD272OSDOption(rawValue: 4, menuTitle: "抗藍光"),
+      MSIMD272OSDOption(rawValue: 5, menuTitle: "電影"),
+      MSIMD272OSDOption(rawValue: 6, menuTitle: "辦公室"),
+      MSIMD272OSDOption(rawValue: 7, menuTitle: "黑白模式"),
+    ], isExperimental: false),
+    MSIMD272OSDSetting(command: "00310", menuTitle: "Eye Saver", options: [
+      MSIMD272OSDOption(rawValue: 0, menuTitle: "關閉"),
+      MSIMD272OSDOption(rawValue: 1, menuTitle: "開啟"),
+    ], isExperimental: false),
+    MSIMD272OSDSetting(command: "00220", menuTitle: "Response Time", options: [
+      MSIMD272OSDOption(rawValue: 0, menuTitle: "Normal"),
+      MSIMD272OSDOption(rawValue: 1, menuTitle: "Fast"),
+      MSIMD272OSDOption(rawValue: 2, menuTitle: "Fastest"),
+    ], isExperimental: false),
+    MSIMD272OSDSetting(command: "002:0", menuTitle: "Screen Size", options: [
+      MSIMD272OSDOption(rawValue: 0, menuTitle: "Auto"),
+      MSIMD272OSDOption(rawValue: 1, menuTitle: "4:3"),
+      MSIMD272OSDOption(rawValue: 2, menuTitle: "16:9"),
+    ], isExperimental: false),
+    MSIMD272OSDSetting(command: "008>0", menuTitle: "KVM", options: [
+      MSIMD272OSDOption(rawValue: 0, menuTitle: "自動"),
+      MSIMD272OSDOption(rawValue: 1, menuTitle: "USB 上行"),
+      MSIMD272OSDOption(rawValue: 2, menuTitle: "Type-C"),
+    ], isExperimental: false),
+    MSIMD272OSDSetting(command: "00820", menuTitle: "OSD Timeout", options: [
+      MSIMD272OSDOption(rawValue: 5, menuTitle: "5 秒"),
+      MSIMD272OSDOption(rawValue: 10, menuTitle: "10 秒"),
+      MSIMD272OSDOption(rawValue: 15, menuTitle: "15 秒"),
+      MSIMD272OSDOption(rawValue: 20, menuTitle: "20 秒"),
+      MSIMD272OSDOption(rawValue: 30, menuTitle: "30 秒"),
+    ], isExperimental: false),
+    MSIMD272OSDSetting(command: "008:0", menuTitle: "HDMI CEC", options: [
+      MSIMD272OSDOption(rawValue: 0, menuTitle: "關閉"),
+      MSIMD272OSDOption(rawValue: 1, menuTitle: "開啟"),
+    ], isExperimental: false),
+  ]
+
+  static let experimental: [MSIMD272OSDSetting] = [
+    MSIMD272OSDSetting(command: "00600", menuTitle: "PIP/PBP 模式", options: [
+      MSIMD272OSDOption(rawValue: 0, menuTitle: "關閉"),
+      MSIMD272OSDOption(rawValue: 1, menuTitle: "PIP"),
+      MSIMD272OSDOption(rawValue: 2, menuTitle: "PBP"),
+    ], isExperimental: true),
+    MSIMD272OSDSetting(command: "00610", menuTitle: "PIP 輸入", options: [
+      MSIMD272OSDOption(rawValue: 0, menuTitle: "HDMI 1"),
+      MSIMD272OSDOption(rawValue: 1, menuTitle: "HDMI 2"),
+      MSIMD272OSDOption(rawValue: 2, menuTitle: "DP"),
+      MSIMD272OSDOption(rawValue: 3, menuTitle: "Type-C"),
+    ], isExperimental: true),
+    MSIMD272OSDSetting(command: "00620", menuTitle: "PBP 輸入", options: [
+      MSIMD272OSDOption(rawValue: 0, menuTitle: "HDMI 1"),
+      MSIMD272OSDOption(rawValue: 1, menuTitle: "HDMI 2"),
+      MSIMD272OSDOption(rawValue: 2, menuTitle: "DP"),
+      MSIMD272OSDOption(rawValue: 3, menuTitle: "Type-C"),
+    ], isExperimental: true),
+    MSIMD272OSDSetting(command: "00630", menuTitle: "PIP 大小", options: [
+      MSIMD272OSDOption(rawValue: 0, menuTitle: "Small"),
+      MSIMD272OSDOption(rawValue: 1, menuTitle: "Medium"),
+      MSIMD272OSDOption(rawValue: 2, menuTitle: "Large"),
+    ], isExperimental: true),
+    MSIMD272OSDSetting(command: "00640", menuTitle: "PIP 位置", options: [
+      MSIMD272OSDOption(rawValue: 0, menuTitle: "左上"),
+      MSIMD272OSDOption(rawValue: 1, menuTitle: "右上"),
+      MSIMD272OSDOption(rawValue: 2, menuTitle: "左下"),
+      MSIMD272OSDOption(rawValue: 3, menuTitle: "右下"),
+    ], isExperimental: true),
+  ]
+
+  static let experimentalActions: [MSIMD272OSDAction] = [
+    MSIMD272OSDAction(command: "00650", menuTitle: "切換顯示", value: 1),
+    MSIMD272OSDAction(command: "00660", menuTitle: "切換音訊", value: 1),
+  ]
+}
+
 enum MSIMD272HIDInput {
   static let helperName = "msi-hid-input-set"
 
@@ -153,6 +256,45 @@ enum MSIMD272HIDInput {
     }
     let success = result.status == 0 && result.output.contains("5600+")
     msiMD272DebugLog("input set source=\(source.helperArgument) success=\(success) status=\(result.status) output=\(result.output) error=\(result.error)")
+    return success
+  }
+
+  static func getCommand(_ command: String) -> Int? {
+    guard let result = self.runHelper(arguments: ["--get", command]) else {
+      return nil
+    }
+    guard result.status == 0 else {
+      msiMD272DebugLog("osd get failed command=\(command) status=\(result.status) output=\(result.output) error=\(result.error)")
+      return nil
+    }
+    for line in result.output.components(separatedBy: .newlines) {
+      let parts = line.components(separatedBy: "\t")
+      if parts.count >= 3, parts[0] == "目前值", parts[1] == command, let rawValue = Int(parts[2]) {
+        msiMD272DebugLog("osd get command=\(command) raw=\(rawValue)")
+        return rawValue
+      }
+    }
+    msiMD272DebugLog("osd get parse failed command=\(command) output=\(result.output)")
+    return nil
+  }
+
+  static func setCommand(_ command: String, value: Int) -> Bool {
+    guard let result = self.runHelper(arguments: ["--set", command, String(value)]) else {
+      return false
+    }
+    var success = result.status == 0 && result.output.contains("5600+")
+    if !success, result.status == 0 {
+      for attempt in 1 ... 5 {
+        Thread.sleep(forTimeInterval: command.hasPrefix("006") ? 0.45 : 0.2)
+        let verifiedValue = self.getCommand(command)
+        msiMD272DebugLog("osd set verify command=\(command) attempt=\(attempt) expected=\(value) actual=\(verifiedValue.map(String.init) ?? "nil")")
+        if verifiedValue == value {
+          success = true
+          break
+        }
+      }
+    }
+    msiMD272DebugLog("osd set command=\(command) value=\(value) success=\(success) status=\(result.status) output=\(result.output) error=\(result.error)")
     return success
   }
 }
