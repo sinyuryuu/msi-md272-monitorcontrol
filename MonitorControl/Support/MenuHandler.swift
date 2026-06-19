@@ -203,8 +203,68 @@ class MenuHandler: NSMenu, NSMenuDelegate {
     if prefs.integer(forKey: PrefKey.multiSliders.rawValue) != MultiSliders.combine.rawValue {
       self.addDisplayMenuBlock(addedSliderHandlers: addedSliderHandlers, blockName: display.readPrefAsString(key: .friendlyName) != "" ? display.readPrefAsString(key: .friendlyName) : display.name, monitorSubMenu: monitorSubMenu, numOfDisplays: numOfDisplays, asSubMenu: asSubMenu)
     }
+    if let otherDisplay = display as? OtherDisplay, otherDisplay.isMSIMD272SpecialDisplay {
+      self.addMSIMD272InputSourceMenu(display: otherDisplay, monitorSubMenu: monitorSubMenu)
+    }
     if addedSliderHandlers.count > 0, prefs.integer(forKey: PrefKey.menuIcon.rawValue) == MenuIcon.sliderOnly.rawValue {
       app.updateStatusItemVisibility(true)
+    }
+  }
+
+  private func addMSIMD272InputSourceMenu(display: OtherDisplay, monitorSubMenu: NSMenu) {
+    let inputMenu = NSMenu()
+    let currentSource = MSIMD272HIDInput.getInputSource()
+
+    for source in MSIMD272InputSource.allCases {
+      let item = NSMenuItem(title: source.menuTitle, action: #selector(self.msiMD272InputSourceClicked(_:)), keyEquivalent: "")
+      item.target = self
+      item.state = currentSource == source ? .on : .off
+      item.representedObject = [
+        "displayID": NSNumber(value: display.identifier),
+        "source": NSNumber(value: source.rawValue),
+      ]
+      inputMenu.addItem(item)
+    }
+
+    if currentSource == nil {
+      inputMenu.addItem(NSMenuItem.separator())
+      let unavailableItem = NSMenuItem(title: "目前無法讀取來源", action: nil, keyEquivalent: "")
+      unavailableItem.isEnabled = false
+      inputMenu.addItem(unavailableItem)
+    }
+
+    let inputItem = NSMenuItem(title: "訊號來源", action: nil, keyEquivalent: "")
+    inputItem.submenu = inputMenu
+    monitorSubMenu.insertItem(inputItem, at: 0)
+  }
+
+  @objc private func msiMD272InputSourceClicked(_ sender: NSMenuItem) {
+    guard
+      let payload = sender.representedObject as? [String: NSNumber],
+      let source = MSIMD272InputSource(rawValue: payload["source"]?.intValue ?? -1)
+    else {
+      return
+    }
+
+    let currentSource = MSIMD272HIDInput.getInputSource()
+    if currentSource == .typec, source != .typec {
+      let alert = NSAlert()
+      alert.messageText = "切換訊號來源"
+      alert.informativeText = "切到 HDMI 或 DP 後，MSI HID 控制介面可能會從 macOS 消失；若無法自動切回，可能需要用螢幕 OSD 手動切回 Type-C。"
+      alert.addButton(withTitle: "繼續切換")
+      alert.addButton(withTitle: "取消")
+      guard alert.runModal() == .alertFirstButtonReturn else {
+        return
+      }
+    }
+
+    let success = MSIMD272HIDInput.setInputSource(source)
+    if !success {
+      let alert = NSAlert()
+      alert.messageText = "切換失敗"
+      alert.informativeText = "沒有收到螢幕確認回覆。若剛切到 HDMI/DP，HID 介面可能已消失，請用螢幕 OSD 或 DDC fallback 切回 Type-C。"
+      alert.addButton(withTitle: "好")
+      alert.runModal()
     }
   }
 

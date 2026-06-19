@@ -30,6 +30,7 @@
 		AA4398A926DD55DA00943F16 /* IntelDDC.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA4398A826DD55DA00943F16 /* IntelDDC.swift */; };
 		B0D272012A00000100D27201 /* MSIMD272SpecialControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0D272002A00000100D27201 /* MSIMD272SpecialControl.swift */; };
 		B0D272032A00000100D27201 /* msi-hid-volume-set in Resources */ = {isa = PBXBuildFile; fileRef = B0D272022A00000100D27201 /* msi-hid-volume-set */; };
+		B0D272052A00000100D27201 /* msi-hid-input-set in Resources */ = {isa = PBXBuildFile; fileRef = B0D272042A00000100D27201 /* msi-hid-input-set */; };
 		AA44E703270377C200E06865 /* KeyboardShortcuts in Frameworks */ = {isa = PBXBuildFile; productRef = AA44E702270377C200E06865 /* KeyboardShortcuts */; };
 		AA44E7052703790100E06865 /* KeyboardShortcuts+Extension.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA44E7042703790100E06865 /* KeyboardShortcuts+Extension.swift */; };
 		AA44E70727038F7F00E06865 /* KeyboardShortcutsManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA44E70627038F7F00E06865 /* KeyboardShortcutsManager.swift */; };
@@ -118,6 +119,7 @@
 		AA4398A826DD55DA00943F16 /* IntelDDC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IntelDDC.swift; sourceTree = "<group>"; };
 		B0D272002A00000100D27201 /* MSIMD272SpecialControl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MSIMD272SpecialControl.swift; sourceTree = "<group>"; };
 		B0D272022A00000100D27201 /* msi-hid-volume-set */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; path = "msi-hid-volume-set"; sourceTree = "<group>"; };
+		B0D272042A00000100D27201 /* msi-hid-input-set */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; path = "msi-hid-input-set"; sourceTree = "<group>"; };
 		AA44E7042703790100E06865 /* KeyboardShortcuts+Extension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "KeyboardShortcuts+Extension.swift"; sourceTree = "<group>"; };
 		AA44E70627038F7F00E06865 /* KeyboardShortcutsManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardShortcutsManager.swift; sourceTree = "<group>"; };
 		AA473EB026DFF8DE0063A181 /* Command.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Command.swift; sourceTree = "<group>"; };
@@ -322,6 +324,7 @@
 				AA4398A826DD55DA00943F16 /* IntelDDC.swift */,
 				B0D272002A00000100D27201 /* MSIMD272SpecialControl.swift */,
 				B0D272022A00000100D27201 /* msi-hid-volume-set */,
+				B0D272042A00000100D27201 /* msi-hid-input-set */,
 				FE4E0895249D584C003A50BB /* OSDUtils.swift */,
 			);
 			path = Support;
@@ -512,6 +515,7 @@
 				AAB2F63D273ED0AD004AB5A4 /* .gitignore in Resources */,
 				8C1741882707B91F00E88D53 /* InternetAccessPolicy.strings in Resources */,
 				B0D272032A00000100D27201 /* msi-hid-volume-set in Resources */,
+				B0D272052A00000100D27201 /* msi-hid-input-set in Resources */,
 				AAB2F644273ED0E9004AB5A4 /* License.txt in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

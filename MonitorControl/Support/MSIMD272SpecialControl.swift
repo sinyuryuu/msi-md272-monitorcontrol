@@ -71,6 +71,92 @@ enum MSIMD272HIDVolume {
   }
 }
 
+enum MSIMD272InputSource: Int, CaseIterable {
+  case hdmi1 = 0
+  case hdmi2 = 1
+  case dp = 2
+  case typec = 3
+
+  var helperArgument: String {
+    switch self {
+    case .hdmi1: return "hdmi1"
+    case .hdmi2: return "hdmi2"
+    case .dp: return "dp"
+    case .typec: return "typec"
+    }
+  }
+
+  var menuTitle: String {
+    switch self {
+    case .hdmi1: return "HDMI 1"
+    case .hdmi2: return "HDMI 2"
+    case .dp: return "DP"
+    case .typec: return "Type-C"
+    }
+  }
+}
+
+enum MSIMD272HIDInput {
+  static let helperName = "msi-hid-input-set"
+
+  private static func runHelper(arguments: [String]) -> (status: Int32, output: String, error: String)? {
+    guard let helperPath = Bundle.main.path(forResource: helperName, ofType: nil) else {
+      os_log("MSI HID input helper not found in app bundle.", type: .error)
+      return nil
+    }
+
+    let process = Process()
+    process.executableURL = URL(fileURLWithPath: helperPath)
+    process.arguments = arguments
+
+    let outputPipe = Pipe()
+    let errorPipe = Pipe()
+    process.standardOutput = outputPipe
+    process.standardError = errorPipe
+
+    do {
+      try process.run()
+      process.waitUntilExit()
+    } catch {
+      os_log("Failed to run MSI HID input helper: %{public}@", type: .error, error.localizedDescription)
+      return nil
+    }
+
+    let output = String(data: outputPipe.fileHandleForReading.readDataToEndOfFile(), encoding: .utf8) ?? ""
+    let errorOutput = String(data: errorPipe.fileHandleForReading.readDataToEndOfFile(), encoding: .utf8) ?? ""
+    return (process.terminationStatus, output, errorOutput)
+  }
+
+  static func getInputSource() -> MSIMD272InputSource? {
+    guard let result = self.runHelper(arguments: ["--get-input"]) else {
+      return nil
+    }
+    guard result.status == 0 else {
+      msiMD272DebugLog("input get failed status=\(result.status) output=\(result.output) error=\(result.error)")
+      return nil
+    }
+    for line in result.output.components(separatedBy: .newlines) {
+      let parts = line.components(separatedBy: "\t")
+      if parts.count >= 2, parts[0] == "目前來源", let rawValue = Int(parts[1]) {
+        let source = MSIMD272InputSource(rawValue: rawValue)
+        msiMD272DebugLog("input get source=\(source?.helperArgument ?? "unknown") raw=\(rawValue)")
+        return source
+      }
+    }
+    msiMD272DebugLog("input get parse failed output=\(result.output)")
+    return nil
+  }
+
+  static func setInputSource(_ source: MSIMD272InputSource) -> Bool {
+    guard let result = self.runHelper(arguments: ["--input", source.helperArgument]) else {
+      return false
+    }
+    let success = result.status == 0 && result.output.contains("5600+")
+    msiMD272DebugLog("input set source=\(source.helperArgument) success=\(success) status=\(result.status) output=\(result.output) error=\(result.error)")
+    return success
+  }
+}
+
 extension OtherDisplay {
   var isMSIMD272SpecialDisplay: Bool {
     let normalizedName = self.name.uppercased()
