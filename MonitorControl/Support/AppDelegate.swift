@@ -148,6 +148,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
     DisplayManager.shared.setupOtherDisplays(firstrun: firstrun)
     self.updateMenusAndKeys()
+    self.scheduleMSIMD272BrightnessSync()
     if !firstrun || prefs.integer(forKey: PrefKey.startupAction.rawValue) == StartupAction.write.rawValue {
       if !prefs.bool(forKey: PrefKey.disableCombinedBrightness.rawValue) {
         DisplayManager.shared.restoreSwBrightnessForAllDisplays(async: !prefs.bool(forKey: PrefKey.disableSmoothBrightness.rawValue))
@@ -305,6 +306,21 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         msiMD272DebugLog("delayed media key interceptor retry after \(delay)s")
         NSLog("MSI MD272 delayed media key interceptor retry after %.1fs", delay)
         MSIMD272MediaKeyInterceptor.shared.update()
+      }
+    }
+  }
+
+  private func scheduleMSIMD272BrightnessSync() {
+    for delay in [0.8, 2.5] {
+      DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
+        let displays = DisplayManager.shared.getMSIMD272SpecialDisplays()
+        guard !displays.isEmpty else {
+          return
+        }
+        msiMD272DebugLog("delayed brightness sync after \(delay)s displays=\(displays.count)")
+        for display in displays {
+          display.refreshMSIMD272BrightnessForMenuIfAvailable()
+        }
       }
     }
   }

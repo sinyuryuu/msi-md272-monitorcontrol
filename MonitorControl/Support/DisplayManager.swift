@@ -377,6 +377,9 @@ class DisplayManager {
 
   func restoreSwBrightnessForAllDisplays(async: Bool = false) {
     for otherDisplay in self.getOtherDisplays() {
+      if otherDisplay.isMSIMD272SpecialDisplay {
+        continue
+      }
       if (otherDisplay.readPrefAsFloat(for: .brightness) == 0 && !prefs.bool(forKey: PrefKey.disableCombinedBrightness.rawValue)) || (otherDisplay.readPrefAsFloat(for: .brightness) < otherDisplay.combinedBrightnessSwitchingValue() && !prefs.bool(forKey: PrefKey.separateCombinedScale.rawValue) && !prefs.bool(forKey: PrefKey.disableCombinedBrightness.rawValue)) || otherDisplay.isSw() {
         let savedPrefValue = otherDisplay.readPrefAsFloat(key: .SwBrightness)
         if otherDisplay.getSwBrightness() != savedPrefValue {

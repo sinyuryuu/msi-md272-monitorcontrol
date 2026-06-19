@@ -36,7 +36,7 @@ class OtherDisplay: Display {
   func processCurrentDDCValue(isReadFromDisplay: Bool, command: Command, firstrun: Bool, currentDDCValue: UInt16) {
     if isReadFromDisplay {
       var currentValue = self.convDDCToValue(for: command, from: currentDDCValue)
-      if !prefs.bool(forKey: PrefKey.disableCombinedBrightness.rawValue), command == .brightness {
+      if !self.isMSIMD272SpecialDisplay, !prefs.bool(forKey: PrefKey.disableCombinedBrightness.rawValue), command == .brightness {
         os_log("- Combined brightness mapping on DDC data.", type: .info)
         if currentValue > 0 {
           currentValue = self.combinedBrightnessSwitchingValue() + currentValue * (1 - self.combinedBrightnessSwitchingValue())
@@ -54,7 +54,7 @@ class OtherDisplay: Display {
       }
     } else {
       var currentValue: Float = self.readPrefAsFloat(for: command)
-      if !prefs.bool(forKey: PrefKey.disableCombinedBrightness.rawValue), command == .brightness {
+      if !self.isMSIMD272SpecialDisplay, !prefs.bool(forKey: PrefKey.disableCombinedBrightness.rawValue), command == .brightness {
         os_log("- Combined brightness mapping on saved data.", type: .info)
         if !self.prefExists(for: command) {
           currentValue = self.combinedBrightnessSwitchingValue() + self.convDDCToValue(for: command, from: currentDDCValue) * (1 - self.combinedBrightnessSwitchingValue())
@@ -72,7 +72,7 @@ class OtherDisplay: Display {
   }
 
   func getDDCValueFromPrefs(_ command: Command) -> UInt16 {
-    self.convValueToDDC(for: command, from: (!prefs.bool(forKey: PrefKey.disableCombinedBrightness.rawValue) && command == .brightness) ? max(0, self.readPrefAsFloat(for: command) - self.combinedBrightnessSwitchingValue()) * (1 / (1 - self.combinedBrightnessSwitchingValue())) : self.readPrefAsFloat(for: command))
+    self.convValueToDDC(for: command, from: (!self.isMSIMD272SpecialDisplay && !prefs.bool(forKey: PrefKey.disableCombinedBrightness.rawValue) && command == .brightness) ? max(0, self.readPrefAsFloat(for: command) - self.combinedBrightnessSwitchingValue()) * (1 / (1 - self.combinedBrightnessSwitchingValue())) : self.readPrefAsFloat(for: command))
   }
 
   func restoreDDCSettingsToDisplay(command: Command) {
@@ -352,7 +352,7 @@ class OtherDisplay: Display {
   override func setDirectBrightness(_ to: Float, transient: Bool = false) -> Bool {
     let value = max(min(to, 1), 0)
     if !self.isSw() {
-      if !prefs.bool(forKey: PrefKey.disableCombinedBrightness.rawValue) {
+      if !self.isMSIMD272SpecialDisplay, !prefs.bool(forKey: PrefKey.disableCombinedBrightness.rawValue) {
         var brightnessValue: Float = 0
         var brightnessSwValue: Float = 1
         if value >= self.combinedBrightnessSwitchingValue() {

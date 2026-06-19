@@ -348,6 +348,14 @@ extension OtherDisplay {
     msiMD272DebugLog("brightness refresh current=\(brightnessValues.current) internal=\(brightnessValue)")
   }
 
+  func refreshMSIMD272BrightnessForMenuIfAvailable() {
+    guard MSIMD272HIDInput.getInputSource() == .typec else {
+      msiMD272DebugLog("brightness menu refresh skipped: MSI HID unavailable or source is not Type-C")
+      return
+    }
+    self.refreshMSIMD272BrightnessFromDisplay()
+  }
+
   func stepMSIMD272HardwareBrightness(isUp: Bool) {
     guard self.isMSIMD272SpecialDisplay, !self.isSw(), !app.safeMode else {
       return
@@ -551,9 +559,6 @@ final class MSIMD272MediaKeyInterceptor {
 
   func update() {
     let displays = DisplayManager.shared.getMSIMD272SpecialDisplays()
-    for display in displays {
-      display.refreshMSIMD272BrightnessFromDisplay()
-    }
     if !displays.isEmpty, !AXIsProcessTrusted() {
       let options = [kAXTrustedCheckOptionPrompt.takeRetainedValue() as String: true] as CFDictionary
       _ = AXIsProcessTrustedWithOptions(options)

@@ -7,6 +7,7 @@ class MenuHandler: NSMenu, NSMenuDelegate {
   var combinedSliderHandler: [Command: SliderHandler] = [:]
 
   var lastMenuRelevantDisplayId: CGDirectDisplayID = 0
+  private var isRefreshingMSIMD272MenuOnOpen = false
 
   func clearMenu() {
     var items: [NSMenuItem] = []
@@ -20,8 +21,10 @@ class MenuHandler: NSMenu, NSMenuDelegate {
   }
 
   func menuWillOpen(_: NSMenu) {
-    for display in DisplayManager.shared.getMSIMD272SpecialDisplays() {
-      display.refreshMSIMD272BrightnessFromDisplay()
+    if !self.isRefreshingMSIMD272MenuOnOpen, !DisplayManager.shared.getMSIMD272SpecialDisplays().isEmpty {
+      self.isRefreshingMSIMD272MenuOnOpen = true
+      self.updateMenus(dontClose: true)
+      self.isRefreshingMSIMD272MenuOnOpen = false
     }
     self.updateMenuRelevantDisplay()
     app.keyboardShortcuts.disengage()
@@ -195,7 +198,7 @@ class MenuHandler: NSMenu, NSMenuDelegate {
     display.sliderHandler[.brightness] = nil
     if !display.readPrefAsBool(key: .unavailableDDC, for: .brightness), !prefs.bool(forKey: PrefKey.hideBrightness.rawValue) {
       if let otherDisplay = display as? OtherDisplay, otherDisplay.isMSIMD272SpecialDisplay {
-        otherDisplay.refreshMSIMD272BrightnessFromDisplay()
+        otherDisplay.refreshMSIMD272BrightnessForMenuIfAvailable()
       }
       let title = NSLocalizedString("Brightness", comment: "Shown in menu")
       addedSliderHandlers.append(self.setupMenuSliderHandler(command: .brightness, display: display, title: title))
@@ -221,6 +224,7 @@ class MenuHandler: NSMenu, NSMenuDelegate {
     for source in MSIMD272InputSource.allCases {
       let item = NSMenuItem(title: source.menuTitle, action: #selector(self.msiMD272InputSourceClicked(_:)), keyEquivalent: "")
       item.target = self
+      item.isEnabled = currentSource != nil
       item.state = currentSource == source ? .on : .off
       item.representedObject = [
         "displayID": NSNumber(value: display.identifier),
@@ -252,10 +256,20 @@ class MenuHandler: NSMenu, NSMenuDelegate {
 
   private func addMSIMD272OSDMenu(display _: OtherDisplay, monitorSubMenu: NSMenu) {
     let osdMenu = NSMenu()
+    guard MSIMD272HIDInput.getCommand("00600") != nil else {
+      let unavailableItem = NSMenuItem(title: "MSI HID 未連線", action: nil, keyEquivalent: "")
+      unavailableItem.isEnabled = false
+      osdMenu.addItem(unavailableItem)
+      let osdItem = NSMenuItem(title: "螢幕設定", action: nil, keyEquivalent: "")
+      osdItem.image = self.msiMD272MenuIcon("slider.horizontal.3")
+      osdItem.submenu = osdMenu
+      monitorSubMenu.insertItem(osdItem, at: 0)
+      return
+    }
+
     for setting in MSIMD272OSDSettings.stable {
       self.addMSIMD272OSDSetting(setting, to: osdMenu)
     }
-
     let osdItem = NSMenuItem(title: "螢幕設定", action: nil, keyEquivalent: "")
     osdItem.image = self.msiMD272MenuIcon("slider.horizontal.3")
     osdItem.submenu = osdMenu
@@ -265,6 +279,16 @@ class MenuHandler: NSMenu, NSMenuDelegate {
   private func addMSIMD272ExperimentalPIPMenu(display _: OtherDisplay, monitorSubMenu: NSMenu) {
     let pipMenu = NSMenu()
     let pipMode = MSIMD272HIDInput.getCommand("00600")
+    guard pipMode != nil else {
+      let unavailableItem = NSMenuItem(title: "MSI HID 未連線", action: nil, keyEquivalent: "")
+      unavailableItem.isEnabled = false
+      pipMenu.addItem(unavailableItem)
+      let pipItem = NSMenuItem(title: "PIP/PBP", action: nil, keyEquivalent: "")
+      pipItem.image = self.msiMD272MenuIcon("pip")
+      pipItem.submenu = pipMenu
+      monitorSubMenu.insertItem(pipItem, at: 0)
+      return
+    }
     let canTogglePIPActions = pipMode == 1 || pipMode == 2
     for setting in MSIMD272OSDSettings.experimental {
       self.addMSIMD272OSDSetting(setting, to: pipMenu)
