@@ -204,6 +204,7 @@ class MenuHandler: NSMenu, NSMenuDelegate {
       self.addDisplayMenuBlock(addedSliderHandlers: addedSliderHandlers, blockName: display.readPrefAsString(key: .friendlyName) != "" ? display.readPrefAsString(key: .friendlyName) : display.name, monitorSubMenu: monitorSubMenu, numOfDisplays: numOfDisplays, asSubMenu: asSubMenu)
     }
     if let otherDisplay = display as? OtherDisplay, otherDisplay.isMSIMD272SpecialDisplay {
+      self.addMSIMD272PowerMenu(display: otherDisplay, monitorSubMenu: monitorSubMenu)
       self.addMSIMD272InputSourceMenu(display: otherDisplay, monitorSubMenu: monitorSubMenu)
     }
     if addedSliderHandlers.count > 0, prefs.integer(forKey: PrefKey.menuIcon.rawValue) == MenuIcon.sliderOnly.rawValue {
@@ -236,6 +237,33 @@ class MenuHandler: NSMenu, NSMenuDelegate {
     let inputItem = NSMenuItem(title: "訊號來源", action: nil, keyEquivalent: "")
     inputItem.submenu = inputMenu
     monitorSubMenu.insertItem(inputItem, at: 0)
+  }
+
+  private func addMSIMD272PowerMenu(display: OtherDisplay, monitorSubMenu: NSMenu) {
+    let item = NSMenuItem(title: "關閉螢幕", action: #selector(self.msiMD272PowerOffClicked(_:)), keyEquivalent: "")
+    item.target = self
+    item.representedObject = NSNumber(value: display.identifier)
+    monitorSubMenu.insertItem(item, at: 0)
+  }
+
+  @objc private func msiMD272PowerOffClicked(_ sender: NSMenuItem) {
+    guard
+      let displayID = (sender.representedObject as? NSNumber)?.uint32Value,
+      let display = DisplayManager.shared.getOtherDisplays().first(where: { $0.identifier == displayID && $0.isMSIMD272SpecialDisplay })
+    else {
+      return
+    }
+
+    let alert = NSAlert()
+    alert.messageText = "關閉螢幕"
+    alert.informativeText = "關閉後 macOS 會失去這台螢幕的 DDC/HID 控制通道，因此無法用此選單重開。需要按螢幕實體電源鍵或 OSD 手動開回來。"
+    alert.addButton(withTitle: "關閉螢幕")
+    alert.addButton(withTitle: "取消")
+    guard alert.runModal() == .alertFirstButtonReturn else {
+      return
+    }
+
+    display.powerOffMSIMD272Display()
   }
 
   @objc private func msiMD272InputSourceClicked(_ sender: NSMenuItem) {

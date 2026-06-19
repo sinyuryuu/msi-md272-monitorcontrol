@@ -230,6 +230,14 @@ extension OtherDisplay {
     MSIMD272ControlHUD.shared.show(displayID: self.identifier, title: "亮度", value: nextValue)
     msiMD272DebugLog("brightness key raw current=\(currentRaw) max=\(maxRaw) next=\(nextRaw) value=\(nextValue)")
   }
+
+  func powerOffMSIMD272Display() {
+    guard self.isMSIMD272SpecialDisplay, !self.isSw(), !app.safeMode else {
+      return
+    }
+    self.writeDDCValues(command: .powerMode, value: 4)
+    msiMD272DebugLog("power off sent via DDC 0xD6 value=4")
+  }
 }
 
 extension DisplayManager {
