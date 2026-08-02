@@ -326,8 +326,17 @@ class AppDelegate: NSObject, NSApplicationDelegate {
   }
 
   func setStartAtLogin(enabled: Bool) {
-    let identifier = "\(Bundle.main.bundleIdentifier!)Helper" as CFString
-    SMLoginItemSetEnabled(identifier, enabled)
+    let identifier = self.loginItemIdentifier() as CFString
+    let success = SMLoginItemSetEnabled(identifier, enabled)
+    msiMD272DebugLog("start at login set enabled=\(enabled) identifier=\(identifier) success=\(success)")
+  }
+
+  func loginItemIdentifier() -> String {
+    let helperURL = Bundle.main.bundleURL.appendingPathComponent("Contents/Library/LoginItems/MonitorControlHelper.app")
+    if let helperIdentifier = Bundle(url: helperURL)?.bundleIdentifier {
+      return helperIdentifier
+    }
+    return "\(Bundle.main.bundleIdentifier!)Helper"
   }
 
   func getSystemSettings() -> [String: AnyObject]? {
